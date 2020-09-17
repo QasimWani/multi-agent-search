@@ -2,7 +2,7 @@
 Implementation of Multi Agent search algorithms such as minimax, alpha-beta pruning, expectimax, and more...
 
 ### Algoritms:
-* [ ] Reflexive Agent (single agent)
+* [X] Reflexive Agent
 * [ ] Minimax
 * [ ] Alpha-Beta
 * [ ] Expectimax
