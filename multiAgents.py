@@ -197,7 +197,7 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
         "*** YOUR CODE HERE ***"
         prune = float('-inf'), float('inf') #alpha-beta
 
-        value, action = self.max_value(gameState, 1, self.index, prune) #run MAXIMIZER (set depth to 1 because `value` will give depth + 1)
+        _, action = self.max_value(gameState, 1, self.index, prune) #run MAXIMIZER (set depth to 1 because `value` will give depth + 1)
         return action
 
 
@@ -269,7 +269,51 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
         legal moves.
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        _, action = self.max_value(gameState, 1, 0)
+        return action
+
+    def value(self, state, depth, agentIndex):
+        if(state.isWin() or state.isLose()): #check for terminal state
+            #this fixes the bug of pacman being stuck
+            return self.evaluationFunction(state), None
+
+        next_agent = (agentIndex + 1) % state.getNumAgents() #cyclic index for next agent
+
+        if(next_agent == self.index): #next_agent = pacman
+            if(self.depth == depth):  #terminal state, if next agent == pacman and depth = game depth
+                return self.evaluationFunction(state), None
+
+            return self.max_value(state, depth + 1, next_agent) #run maximizer, every max node iterates depth by 1.
+
+        return self.min_value(state, depth, next_agent) #min state, i.e. ghost(s), depth remains the same
+    
+    def max_value(self, state, depth, agentIndex):
+        v, max_action = float('-inf'), None #represent smallest maximum value
+        actions = state.getLegalActions(self.index) #get actions
+        for action in actions:
+            successor = state.generateSuccessor(agentIndex, action) #get next states
+            next_value = self.value(successor, depth, agentIndex)[0]
+            if (next_value > v): #store the maximum action
+                max_action = action
+            v = max(v, next_value)
+
+        return v, max_action #should return maximum possible value
+
+    def min_value(self, state, depth, agentIndex):
+        v, minimum_action = float('inf'), None #represent largest smallest value
+        actions = state.getLegalActions(agentIndex) #get action for a specific ghost
+        uniform_expectation = 1/len(actions) #since expectimax in this project follows uniform dist, each probability is equal.
+        expected_value = 0 #expected value 
+
+        for action in actions:
+            successor = state.generateSuccessor(agentIndex, action) #get next states
+            next_value = self.value(successor, depth, agentIndex)[0]
+            if (v > expected_value): #store the minimum action
+                minimum_action = action
+
+            expected_value +=  uniform_expectation * next_value #calculate the expectation
+
+        return expected_value, minimum_action #should return minimum possible value along with minimum action
 
 def betterEvaluationFunction(currentGameState):
     """
