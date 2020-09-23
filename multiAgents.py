@@ -113,7 +113,6 @@ class MultiAgentSearchAgent(Agent):
         self.index = 0 # Pacman is always agent index 0
         self.evaluationFunction = util.lookup(evalFn, globals())
         self.depth = int(depth)
-        self.num_agents = None #set total number of agents (including pacman)
 
 class MinimaxAgent(MultiAgentSearchAgent):
     """
@@ -144,53 +143,48 @@ class MinimaxAgent(MultiAgentSearchAgent):
         Returns whether or not the game state is a losing state
         """
         "*** YOUR CODE HERE ***"
-        self.num_agents = gameState.getNumAgents() #set number of agents
-        value, action = self.value(gameState, 0, self.index)
-        print(value)
+        _, action = self.max_value(gameState, 1, self.index) #run MAXIMIZER (set depth to 1 because `value` will give depth + 1)
         return action
-        # util.raiseNotDefined()
     
 
 
     def value(self, state, depth, agentIndex):
-        
-        if(self.index == agentIndex): #max state, i.e. pacman
-            return self.max_value(state, depth)
-            
-        if(self.depth == depth): #terminal state
-            return self.evaluationFunction(state), None #return current gamestate utility
-        
-        return self.min_value(state, depth + 1, agentIndex) #min state, i.e. ghost(s)
+        if(state.isWin() or state.isLose()): #check for terminal state
+            #this fixes the bug of pacman being stuck
+            return self.evaluationFunction(state), None
 
-    def max_value(self, state, depth):
-        v = float('-inf') #represent smallest maximum value
+        next_agent = (agentIndex + 1) % state.getNumAgents() #cyclic index for next agent
+
+        if(next_agent == self.index): #next_agent = pacman
+            if(self.depth == depth):  #terminal state, if next agent == pacman and depth = game depth
+                return self.evaluationFunction(state), None
+
+            return self.max_value(state, depth + 1, next_agent) #run maximizer, every max node iterates depth by 1.
+
+        return self.min_value(state, depth, next_agent) #min state, i.e. ghost(s)
+
+    def max_value(self, state, depth, agentIndex):
+        v, max_action = float('-inf'), None #represent smallest maximum value
         actions = state.getLegalActions(self.index) #get actions
-        max_action = None #maximum action
 
         for action in actions:
-            successor = state.generateSuccessor(self.index, action) #get next states
-            for agentIndex in range(1, self.num_agents):
-                next_value = self.value(successor, depth, agentIndex)[0]
-                print(f"Value of agent {agentIndex} at depth {depth} = {next_value}")
-                if (next_value > v): #store the maximum action
-                    max_action = action
-                v = max(v, next_value)
+            successor = state.generateSuccessor(agentIndex, action) #get next states
+            next_value = self.value(successor, depth, agentIndex)[0]
+            if (next_value > v): #store the maximum action
+                max_action = action
+            v = max(v, next_value)
         return v, max_action #should return maximum possible value
 
     def min_value(self, state, depth, agentIndex):
-        v = float('inf') #represent largest smallest value
-        minimum_action = None #minimum action
-
+        v, minimum_action = float('inf'), None #represent largest smallest value
         actions = state.getLegalActions(agentIndex) #get action for a specific ghost
+
         for action in actions:
             successor = state.generateSuccessor(agentIndex, action) #get next states
-            next_value = self.value(successor, depth, self.index)[0]
-            print(f"Value of agent {agentIndex} at depth {depth} = {next_value}")
-
+            next_value = self.value(successor, depth, agentIndex)[0]
             if (v > next_value): #store the minimum action
                 minimum_action = action
             v = min(v, next_value)
-        
         return v, minimum_action #should return minimum possible value along with minimum action
 
 class AlphaBetaAgent(MultiAgentSearchAgent):
