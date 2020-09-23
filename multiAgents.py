@@ -71,7 +71,7 @@ class ReflexAgent(Agent):
         newPos = successorGameState.getPacmanPosition()
         newFood = successorGameState.getFood().asList()
         newGhostStates = successorGameState.getGhostStates()
-        newScaredTimes = [ghostState.scaredTimer for ghostState in newGhostStates]
+        # newScaredTimes = [ghostState.scaredTimer for ghostState in newGhostStates]
 
         "*** YOUR CODE HERE ***"
         #the farther the ghost from pacman, the higher the score should be.
@@ -145,8 +145,6 @@ class MinimaxAgent(MultiAgentSearchAgent):
         "*** YOUR CODE HERE ***"
         _, action = self.max_value(gameState, 1, self.index) #run MAXIMIZER (set depth to 1 because `value` will give depth + 1)
         return action
-    
-
 
     def value(self, state, depth, agentIndex):
         if(state.isWin() or state.isLose()): #check for terminal state
@@ -161,7 +159,7 @@ class MinimaxAgent(MultiAgentSearchAgent):
 
             return self.max_value(state, depth + 1, next_agent) #run maximizer, every max node iterates depth by 1.
 
-        return self.min_value(state, depth, next_agent) #min state, i.e. ghost(s)
+        return self.min_value(state, depth, next_agent) #min state, i.e. ghost(s), depth remains the same
 
     def max_value(self, state, depth, agentIndex):
         v, max_action = float('-inf'), None #represent smallest maximum value
@@ -197,7 +195,66 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
         Returns the minimax action using self.depth and self.evaluationFunction
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        prune = float('-inf'), float('inf') #alpha-beta
+
+        value, action = self.max_value(gameState, 1, self.index, prune) #run MAXIMIZER (set depth to 1 because `value` will give depth + 1)
+        return action
+
+
+    def value(self, state, depth, agentIndex, prune):
+
+        if(state.isWin() or state.isLose()): #check for terminal state
+            #this fixes the bug of pacman being stuck
+            return self.evaluationFunction(state), None
+        
+        next_agent = (agentIndex + 1) % state.getNumAgents() #cyclic index for next agent
+
+        if(next_agent == self.index): #pacman is next agent?
+            if self.depth == depth: #terminal state when next_agent = pacman and depth = game_depth
+                return self.evaluationFunction(state), None #perform static evaluation
+
+            return self.max_value(state, depth + 1, next_agent, prune) #use MAXIMIZER
+        return self.min_value(state, depth, next_agent, prune) #use MINIMIZER
+
+    def max_value(self, state, depth, agentIndex, prune):
+        alpha, beta = prune
+        v, max_action = float('-inf'), None #represent smallest maximum value
+        actions = state.getLegalActions(self.index) #get actions
+
+        for action in actions:
+            successor = state.generateSuccessor(agentIndex, action) #get next states
+            next_value = self.value(successor, depth, agentIndex, (alpha, beta))[0]
+            if (next_value > v): #store the maximum action
+                max_action = action
+
+            v = max(v, next_value)
+
+            if(v > beta):
+                return v, max_action
+
+            alpha = max(alpha, v)
+
+        return v, max_action #should return maximum possible value
+
+    def min_value(self, state, depth, agentIndex, prune):
+        alpha, beta = prune
+        v, minimum_action = float('inf'), None #represent largest smallest value
+        actions = state.getLegalActions(agentIndex) #get action for a specific ghost
+
+        for action in actions:
+            successor = state.generateSuccessor(agentIndex, action) #get next states
+            next_value = self.value(successor, depth, agentIndex, (alpha, beta))[0]
+            if (v > next_value): #store the minimum action
+                minimum_action = action
+            
+            v = min(v, next_value)
+            
+            if(v < alpha):
+                return v, minimum_action
+            
+            beta = min(beta, v)
+            
+        return v, minimum_action #should return minimum possible value along with minimum action
 
 class ExpectimaxAgent(MultiAgentSearchAgent):
     """
