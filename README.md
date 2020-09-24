@@ -6,4 +6,4 @@ Implementation of Multi Agent search algorithms such as minimax, alpha-beta prun
 * [X] Minimax
 * [X] Alpha-Beta
 * [X] Expectimax
-* [ ] Evaluation Function design
+* [X] Evaluation Function design
