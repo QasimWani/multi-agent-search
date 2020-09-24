@@ -320,10 +320,46 @@ def betterEvaluationFunction(currentGameState):
     Your extreme ghost-hunting, pellet-nabbing, food-gobbling, unstoppable
     evaluation function (question 5).
 
-    DESCRIPTION: <write something here so we know what you did>
+    DESCRIPTION: 
+    * The evaluation function designed rewards the pacman agent inversely proportional to
+      the square of manhattan distance to the nearest food and rewards the agent proportional
+      to the manhattan distance to the nearest ghost.
+
+    * This can be expressed by the following formula: 
+        evaluationFunction = current_score * ∑(distance_to_ghost/(total_distance_to_food^2)) + 0.1 (bias)
+
+    * In this, bias is chosen to prevent from 0 score which implies that the pacman is at a goal state which
+    may not always be the case.
+
+    * In layman terms, what this means is the following:
+        - The farther the ghost from pacman, the higher the score.
+        - The closer the food from pacman, the higher the score.
+    
+    * Reason for using squared proportion:
+        This was used based on pure trial and error. After using different approaches,
+        squared heuristic proved to be the most sensical because pacman should try his
+        best to live than eat the nearest food. This is because the game doesn't end if
+        pacman is unable to eat food, but ends if it comes under contact with ghost (without sudo mode).
+        - This shows that the pacman should value proxmity to the ghost more than proximity to the nearest food-pellet.
+
+    # Note: The logic of this code is reused from problem 1 of this assignment, because it's a powerful heuristic.
+    
     """
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    # Useful information you can extract from a GameState (pacman.py)
+    newPos = currentGameState.getPacmanPosition()
+    newFood = currentGameState.getFood().asList()
+    newGhostStates = currentGameState.getGhostStates()
+
+    #the farther the ghost from pacman, the higher the score should be.
+    #the closer the food from pacman, the higher the score should be.
+    #evaluationFunction = current_score * ∑(distance_to_ghost/(total_distance_to_food^2)) + 0.1 (bias)
+
+    dist_ghost = [manhattanDistance(newPos, ghostState.getPosition()) for ghostState in newGhostStates]
+    food_distance = sum([manhattanDistance(newPos, food) for food in newFood]) if newFood else 1e-1       
+    food_ghost = sum([x/(food_distance**2) for x in dist_ghost]) + 1e-1
+
+    return currentGameState.getScore() * food_ghost
 
 # Abbreviation
 better = betterEvaluationFunction
