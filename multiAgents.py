@@ -195,9 +195,10 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
         Returns the minimax action using self.depth and self.evaluationFunction
         """
         "*** YOUR CODE HERE ***"
-        prune = float('-inf'), float('inf') #alpha-beta
-
-        _, action = self.max_value(gameState, 1, self.index, prune) #run MAXIMIZER (set depth to 1 because `value` will give depth + 1)
+        prune = float('-inf'), float('inf') #alpha-beta initialization
+        
+        #run MAXIMIZER (set depth to 1 because `value` will give depth + 1)
+        _, action = self.max_value(gameState, 1, self.index, prune)
         return action
 
 
@@ -343,7 +344,7 @@ def betterEvaluationFunction(currentGameState):
         - This shows that the pacman should value proxmity to the ghost more than proximity to the nearest food-pellet.
 
     # Note: The logic of this code is reused from problem 1 of this assignment, because it's a powerful heuristic.
-    
+
     """
     "*** YOUR CODE HERE ***"
     # Useful information you can extract from a GameState (pacman.py)
